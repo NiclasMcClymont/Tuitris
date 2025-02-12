@@ -1,6 +1,6 @@
 # Rust Tetris
 
-A terminal-based Tetris game written in Rust. This implementation features modern Tetris mechanics such as hold, ghost pieces, configurable key bindings, and save-state support. It leverages [crossterm](https://crates.io/crates/crossterm) for terminal I/O, [ratatui](https://crates.io/crates/ratatui) for UI rendering, and [clap](https://crates.io/crates/clap) for command-line argument parsing.
+A simple terminal-based Tetris game written in Rust. It leverages [crossterm](https://crates.io/crates/crossterm) for terminal I/O, [ratatui](https://crates.io/crates/ratatui) for UI rendering, and [clap](https://crates.io/crates/clap) for command-line argument parsing.
 
 ## Features
 
@@ -130,7 +130,7 @@ cargo run --release -- --create_sample sample_save.txt
 
 ## Contributing
 
-Contributions are welcome! Feel free to open issues or submit pull requests. When contributing, please follow the existing code style and document your changes.
+Feel free to open issues or submit pull requests. When contributing, please follow the existing code style and document your changes.
 
 ## License
 
