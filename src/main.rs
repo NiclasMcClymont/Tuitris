@@ -757,6 +757,10 @@ struct Args {
     #[clap(long, default_value = "q")]
     quit: String,
 
+    /// Path to load key bindings from a config file.
+    #[clap(long)]
+    kb_file: Option<String>,
+
     /// Tick speed in milliseconds.
     #[clap(short, long, default_value_t = 500)]
     tick_speed: u64,
@@ -768,10 +772,6 @@ struct Args {
     /// Path to create a sample save file.
     #[clap(long)]
     create_sample: Option<String>,
-
-    /// Path to load key bindings from a config file.
-    #[clap(long)]
-    kb_path: Option<String>,
 }
 
 /// Holds key bindings as crossterm KeyCodes.
@@ -907,8 +907,8 @@ fn main() -> Result<(), io::Error> {
     }
 
     let key_config: KeyConfig;
-    if let Some(ref kb_path) = args.kb_path {
-        match KeyConfig::from_file(kb_path) {
+    if let Some(ref kb_file) = args.kb_file {
+        match KeyConfig::from_file(kb_file) {
             Ok(config) => key_config = config,
             Err(e) => {
                 eprintln!("Error loading key bindings from file: {}", e);
