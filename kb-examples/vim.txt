@@ -1,0 +1,10 @@
+move_left=h
+move_right=l
+move_down=j
+rotate_cw=k
+rotate_ccw=u
+hold=m
+hard_drop=space
+pause=p
+restart=y
+quit=q

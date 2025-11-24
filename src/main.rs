@@ -804,18 +804,6 @@ impl KeyConfig {
             quit: parse_key(&args.quit),
         }
     }
-    /*
-    move_left=LEFT
-    move_right=RIGHT
-    move_down=DOWN
-    rotate_cw=UP
-    rotate_ccw=Z
-    hold=H
-    hard_drop=SPACE
-    pause=P
-    restart=R
-    quit=Q
-    */
     fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         use std::io::BufRead;
         let file = std::fs::File::open(path)?;
