@@ -92,7 +92,12 @@ Default key bindings:
 - **R:** Restart
 - **Q:** Quit
 
-*(Can be customized via command-line options.)*
+> [!TIP]
+> Key bindings can be customized via command-line options
+
+### Keybind File
+
+You can create a `.txt` file with custom keybinds and load it with the `--kb-file` flag. Example keybind files are in [./kb-examples/](kb-examples/). 
 
 ## Save-State File Format
 
