@@ -768,6 +768,10 @@ struct Args {
     /// Path to create a sample save file.
     #[clap(long)]
     create_sample: Option<String>,
+
+    /// Path to load key bindings from a config file.
+    #[clap(long)]
+    kb_path: Option<String>,
 }
 
 /// Holds key bindings as crossterm KeyCodes.
@@ -799,6 +803,48 @@ impl KeyConfig {
             restart: parse_key(&args.restart),
             quit: parse_key(&args.quit),
         }
+    }
+    /*
+    move_left=LEFT
+    move_right=RIGHT
+    move_down=DOWN
+    rotate_cw=UP
+    rotate_ccw=Z
+    hold=H
+    hard_drop=SPACE
+    pause=P
+    restart=R
+    quit=Q
+    */
+    fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        use std::io::BufRead;
+        let file = std::fs::File::open(path)?;
+        let reader = std::io::BufReader::new(file);
+
+        let mut config_map = std::collections::HashMap::new();
+        for line_res in reader.lines() {
+            let line = line_res?;
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if let Some((key, value)) = line.split_once('=') {
+                config_map.insert(key.trim().to_lowercase(), value.trim().to_string());
+            }
+        }
+
+        Ok(KeyConfig {
+            move_left: parse_key(config_map.get("move_left").unwrap_or(&"Left".to_string())),
+            move_right: parse_key(config_map.get("move_right").unwrap_or(&"Right".to_string())),
+            move_down: parse_key(config_map.get("move_down").unwrap_or(&"Down".to_string())),
+            rotate_cw: parse_key(config_map.get("rotate_cw").unwrap_or(&"Up".to_string())),
+            rotate_ccw: parse_key(config_map.get("rotate_ccw").unwrap_or(&"z".to_string())),
+            hold: parse_key(config_map.get("hold").unwrap_or(&"h".to_string())),
+            hard_drop: parse_key(config_map.get("hard_drop").unwrap_or(&"Space".to_string())),
+            pause: parse_key(config_map.get("pause").unwrap_or(&"p".to_string())),
+            restart: parse_key(config_map.get("restart").unwrap_or(&"r".to_string())),
+            quit: parse_key(config_map.get("quit").unwrap_or(&"q".to_string())),
+        })
     }
 }
 
@@ -872,7 +918,18 @@ fn main() -> Result<(), io::Error> {
         return Ok(());
     }
 
-    let key_config = KeyConfig::from_args(&args);
+    let key_config: KeyConfig;
+    if let Some(ref kb_path) = args.kb_path {
+        match KeyConfig::from_file(kb_path) {
+            Ok(config) => key_config = config,
+            Err(e) => {
+                eprintln!("Error loading key bindings from file: {}", e);
+                key_config = KeyConfig::from_args(&args);
+            }
+        }
+    } else {
+        key_config = KeyConfig::from_args(&args);
+    }
     let tick_duration = Duration::from_millis(args.tick_speed);
     let mut game = if let Some(ref path) = args.load_state {
         match Game::load_from_file(path, tick_duration) {
