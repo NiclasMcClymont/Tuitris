@@ -47,6 +47,12 @@ Configure various aspects of the game using flags:
   cargo run --release -- --move_left a --move_right d --move_down s --rotate_cw w --rotate_ccw q --hold e --hard_drop Space --pause p --restart r --quit x
   ```
 
+- **Load Key Bindings From File:**
+
+  ```bash
+  cargo run --release -- --kb-file kb-examples/vim.txt
+  ```
+
 - **Set Tick Speed:**
 
   ```bash
