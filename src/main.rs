@@ -910,13 +910,6 @@ fn main() -> Result<(), io::Error> {
     // Load key bindings configuration
     //
 
-    // Find the OS specific config dir
-    let config_path = dirs::config_dir()
-        .unwrap_or_else(|| std::path::PathBuf::from("."))
-        .join("tuitris").join("keybinds.txt");
-    let config_key_path = config_path.to_str().unwrap_or("");
-    // An empty KeyConfig which will be filled in 
-    let key_config: KeyConfig;
     // TODO:
     // Keybinds are currently checked in this order:
     // 1. From the file specified by `--kb-file` argument (if provided)
@@ -927,28 +920,32 @@ fn main() -> Result<(), io::Error> {
     // 2. Override with keybinds from the config file (if it exists)
     // 3. Override with keybinds from command-line arguments (if provided)
     //
-    // Try to load from `args.kb_file`
-    if let Some(ref kb_file) = args.kb_file {
-        match KeyConfig::from_file(kb_file) {
-            Ok(config) => key_config = config,
-            Err(e) => {
+    fn load_key_config(args: &Args) -> KeyConfig {
+        // Try to load from args.kb_file
+        if let Some(ref kb_file) = args.kb_file {
+            return KeyConfig::from_file(kb_file).unwrap_or_else(|e| {
                 eprintln!("Error loading key bindings from file: {}", e);
-                key_config = KeyConfig::from_args(&args);
-            }
+                KeyConfig::from_args(args)
+            });
         }
-    // Try to load from `config_path/keybinds.txt`
-    } else if std::path::Path::new(config_key_path).exists() {
-        match KeyConfig::from_file(config_key_path) {
-            Ok(config) => key_config = config,
-            Err(e) => {
+        // Try to load from config_dir/tuitris/keybinds.txt
+        let config_path = dirs::config_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("tuitris")
+            .join("keybinds.txt");
+        if config_path.exists() {
+            return KeyConfig::from_file(
+                config_path.to_str().expect("Config path is not valid UTF-8")
+            ).unwrap_or_else(|e| {
                 eprintln!("Error loading key bindings from config file: {}", e);
-                key_config = KeyConfig::from_args(&args);
-            }
+                KeyConfig::from_args(args)
+            });
         }
-    // Fallback to command-line arguments
-    } else {
-        key_config = KeyConfig::from_args(&args);
+        // Fallback to command-line arguments
+        KeyConfig::from_args(args)
     }
+    // Load key configuration
+    let key_config = load_key_config(&args);
 
     let tick_duration = Duration::from_millis(args.tick_speed);
     let mut game = if let Some(ref path) = args.load_state {
