@@ -10,3 +10,4 @@ crossterm = "0.26.1"
 ratatui = "0.20"
 rand = "0.8"
 clap = { version = "4.1", features = ["derive"] }
+dirs = "5"

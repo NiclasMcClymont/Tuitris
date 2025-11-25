@@ -906,7 +906,28 @@ fn main() -> Result<(), io::Error> {
         return Ok(());
     }
 
+    //
+    // Load key bindings configuration
+    //
+
+    // Find the OS specific config dir
+    let config_path = dirs::config_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("tuitris").join("keybinds.txt");
+    let config_key_path = config_path.to_str().unwrap_or("");
+    // An empty KeyConfig which will be filled in 
     let key_config: KeyConfig;
+    // TODO:
+    // Keybinds are currently checked in this order:
+    // 1. From the file specified by `--kb-file` argument (if provided)
+    // 2. From the default config file at ~/.config/tuitris/keybinds.txt (if it exists)
+    // 3. From command-line arguments (default values if not provided)
+    // Instead they should be checked in this order:
+    // 1. Load default keybinds
+    // 2. Override with keybinds from the config file (if it exists)
+    // 3. Override with keybinds from command-line arguments (if provided)
+    //
+    // Try to load from `args.kb_file`
     if let Some(ref kb_file) = args.kb_file {
         match KeyConfig::from_file(kb_file) {
             Ok(config) => key_config = config,
@@ -915,9 +936,20 @@ fn main() -> Result<(), io::Error> {
                 key_config = KeyConfig::from_args(&args);
             }
         }
+    // Try to load from `config_path/keybinds.txt`
+    } else if std::path::Path::new(config_key_path).exists() {
+        match KeyConfig::from_file(config_key_path) {
+            Ok(config) => key_config = config,
+            Err(e) => {
+                eprintln!("Error loading key bindings from config file: {}", e);
+                key_config = KeyConfig::from_args(&args);
+            }
+        }
+    // Fallback to command-line arguments
     } else {
         key_config = KeyConfig::from_args(&args);
     }
+
     let tick_duration = Duration::from_millis(args.tick_speed);
     let mut game = if let Some(ref path) = args.load_state {
         match Game::load_from_file(path, tick_duration) {
