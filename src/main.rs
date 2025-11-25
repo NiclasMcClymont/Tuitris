@@ -757,6 +757,10 @@ struct Args {
     #[clap(long, default_value = "q")]
     quit: String,
 
+    /// Path to load key bindings from a config file.
+    #[clap(long)]
+    kb_file: Option<String>,
+
     /// Tick speed in milliseconds.
     #[clap(short, long, default_value_t = 500)]
     tick_speed: u64,
@@ -800,6 +804,36 @@ impl KeyConfig {
             quit: parse_key(&args.quit),
         }
     }
+    fn from_file(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        use std::io::BufRead;
+        let file = std::fs::File::open(path)?;
+        let reader = std::io::BufReader::new(file);
+
+        let mut config_map = std::collections::HashMap::new();
+        for line_res in reader.lines() {
+            let line = line_res?;
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if let Some((key, value)) = line.split_once('=') {
+                config_map.insert(key.trim().to_lowercase(), value.trim().to_string());
+            }
+        }
+
+        Ok(KeyConfig {
+            move_left: parse_key(config_map.get("move_left").unwrap_or(&"Left".to_string())),
+            move_right: parse_key(config_map.get("move_right").unwrap_or(&"Right".to_string())),
+            move_down: parse_key(config_map.get("move_down").unwrap_or(&"Down".to_string())),
+            rotate_cw: parse_key(config_map.get("rotate_cw").unwrap_or(&"Up".to_string())),
+            rotate_ccw: parse_key(config_map.get("rotate_ccw").unwrap_or(&"z".to_string())),
+            hold: parse_key(config_map.get("hold").unwrap_or(&"h".to_string())),
+            hard_drop: parse_key(config_map.get("hard_drop").unwrap_or(&"Space".to_string())),
+            pause: parse_key(config_map.get("pause").unwrap_or(&"p".to_string())),
+            restart: parse_key(config_map.get("restart").unwrap_or(&"r".to_string())),
+            quit: parse_key(config_map.get("quit").unwrap_or(&"q".to_string())),
+        })
+    }
 }
 
 /// Parses a string to a KeyCode. Recognizes "left", "right", "up", "down", "space", or a single character.
@@ -826,6 +860,43 @@ fn key_name(key: KeyCode) -> String {
         KeyCode::Char(c) => c.to_string(),
         other => format!("{:?}", other),
     }
+}
+
+// Load keybind configuration
+/*
+    TODO:
+    Keybinds are currently checked in this order:
+    1. From the file specified by `--kb-file` argument (if provided)
+    2. From the default config file at ~/.config/tuitris/keybinds.txt (if it exists)
+    3. From command-line arguments (default values if not provided)
+    Instead they should be checked in this order:
+    1. Load default keybinds
+    2. Override with keybinds from the config file (if it exists)
+    3. Override with keybinds from command-line arguments (if provided)
+*/
+fn load_key_config(args: &Args) -> KeyConfig {
+    // Try to load from args.kb_file
+    if let Some(ref kb_file) = args.kb_file {
+        return KeyConfig::from_file(kb_file).unwrap_or_else(|e| {
+            eprintln!("Error loading key bindings from file: {}", e);
+            KeyConfig::from_args(args)
+        });
+    }
+    // Try to load from config_dir/tuitris/keybinds.txt
+    let config_path = dirs::config_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("tuitris")
+        .join("keybinds.txt");
+    if config_path.exists() {
+        return KeyConfig::from_file(
+            config_path.to_str().expect("Config path is not valid UTF-8")
+        ).unwrap_or_else(|e| {
+            eprintln!("Error loading key bindings from config file: {}", e);
+            KeyConfig::from_args(args)
+        });
+    }
+    // Fallback to command-line arguments
+    KeyConfig::from_args(args)
 }
 
 /// Writes a sample save state file with default values.
@@ -872,7 +943,9 @@ fn main() -> Result<(), io::Error> {
         return Ok(());
     }
 
-    let key_config = KeyConfig::from_args(&args);
+    // Load key configuration
+    let key_config = load_key_config(&args);
+
     let tick_duration = Duration::from_millis(args.tick_speed);
     let mut game = if let Some(ref path) = args.load_state {
         match Game::load_from_file(path, tick_duration) {

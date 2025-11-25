@@ -47,6 +47,12 @@ Configure various aspects of the game using flags:
   cargo run --release -- --move_left a --move_right d --move_down s --rotate_cw w --rotate_ccw q --hold e --hard_drop Space --pause p --restart r --quit x
   ```
 
+- **Load Key Bindings From File:**
+
+  ```bash
+  cargo run --release -- --kb-file kb-examples/vim.txt
+  ```
+
 - **Set Tick Speed:**
 
   ```bash
@@ -86,7 +92,35 @@ Default key bindings:
 - **R:** Restart
 - **Q:** Quit
 
-*(Can be customized via command-line options.)*
+> [!TIP]
+> Key bindings can be customized via command-line options
+
+### Keybind File
+
+You can create a `.txt` file with custom keybinds and load it with the `--kb-file` flag. Example keybind files are in [./kb-examples/](kb-examples/). 
+
+To automatically load a set of keybinds each time you play, create a `keybinds.txt` file in the following location according to your OS. 
+
+#### Linux:
+```
+~/.config/tuitris/keybinds.txt
+```
+
+#### macOS:
+```
+~/Library/Application Support/tuitris/keybinds.txt
+```
+
+#### Windows:
+```
+%APPDATA%\tuitris\keybinds.txt
+```
+
+> [!WARNING]
+> When you have placed a `keybinds.txt` file in your config path, all keybind related flags are ignored. This includes the `--kb-file` flag.
+
+> [!WARNING]
+> When loading keybinds from a `.txt` file via the `--kb-file` flag, all other keybind related flags are ignored.
 
 ## Save-State File Format
 
