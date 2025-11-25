@@ -99,6 +99,29 @@ Default key bindings:
 
 You can create a `.txt` file with custom keybinds and load it with the `--kb-file` flag. Example keybind files are in [./kb-examples/](kb-examples/). 
 
+To automatically load a set of keybinds each time you play, create a `keybinds.txt` file in the following location according to your OS. 
+
+#### Linux:
+```
+~/.config/tuitris/keybinds.txt
+```
+
+#### macOS:
+```
+~/Library/Application Support/tuitris/keybinds.txt
+```
+
+#### Windows:
+```
+%APPDATA%\tuitris\keybinds.txt
+```
+
+> [!WARN]
+> When you have placed a `keybinds.txt` file in your config path, all keybind related flags are ignored. This includes the `--kb-file` flag.
+
+> [!WARN]
+> When loading keybinds from a `.txt` file via the `--kb-file` flag, all other keybind related flags are ignored.
+
 ## Save-State File Format
 
 The save-state file is a simple text file:
