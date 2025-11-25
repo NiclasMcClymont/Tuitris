@@ -862,6 +862,43 @@ fn key_name(key: KeyCode) -> String {
     }
 }
 
+// Load keybind configuration
+/*
+    TODO:
+    Keybinds are currently checked in this order:
+    1. From the file specified by `--kb-file` argument (if provided)
+    2. From the default config file at ~/.config/tuitris/keybinds.txt (if it exists)
+    3. From command-line arguments (default values if not provided)
+    Instead they should be checked in this order:
+    1. Load default keybinds
+    2. Override with keybinds from the config file (if it exists)
+    3. Override with keybinds from command-line arguments (if provided)
+*/
+fn load_key_config(args: &Args) -> KeyConfig {
+    // Try to load from args.kb_file
+    if let Some(ref kb_file) = args.kb_file {
+        return KeyConfig::from_file(kb_file).unwrap_or_else(|e| {
+            eprintln!("Error loading key bindings from file: {}", e);
+            KeyConfig::from_args(args)
+        });
+    }
+    // Try to load from config_dir/tuitris/keybinds.txt
+    let config_path = dirs::config_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("tuitris")
+        .join("keybinds.txt");
+    if config_path.exists() {
+        return KeyConfig::from_file(
+            config_path.to_str().expect("Config path is not valid UTF-8")
+        ).unwrap_or_else(|e| {
+            eprintln!("Error loading key bindings from config file: {}", e);
+            KeyConfig::from_args(args)
+        });
+    }
+    // Fallback to command-line arguments
+    KeyConfig::from_args(args)
+}
+
 /// Writes a sample save state file with default values.
 fn write_sample_save_state(path: &str) -> Result<(), Box<dyn std::error::Error>> {
     use std::io::Write;
@@ -906,44 +943,6 @@ fn main() -> Result<(), io::Error> {
         return Ok(());
     }
 
-    //
-    // Load key bindings configuration
-    //
-
-    // TODO:
-    // Keybinds are currently checked in this order:
-    // 1. From the file specified by `--kb-file` argument (if provided)
-    // 2. From the default config file at ~/.config/tuitris/keybinds.txt (if it exists)
-    // 3. From command-line arguments (default values if not provided)
-    // Instead they should be checked in this order:
-    // 1. Load default keybinds
-    // 2. Override with keybinds from the config file (if it exists)
-    // 3. Override with keybinds from command-line arguments (if provided)
-    //
-    fn load_key_config(args: &Args) -> KeyConfig {
-        // Try to load from args.kb_file
-        if let Some(ref kb_file) = args.kb_file {
-            return KeyConfig::from_file(kb_file).unwrap_or_else(|e| {
-                eprintln!("Error loading key bindings from file: {}", e);
-                KeyConfig::from_args(args)
-            });
-        }
-        // Try to load from config_dir/tuitris/keybinds.txt
-        let config_path = dirs::config_dir()
-            .unwrap_or_else(|| std::path::PathBuf::from("."))
-            .join("tuitris")
-            .join("keybinds.txt");
-        if config_path.exists() {
-            return KeyConfig::from_file(
-                config_path.to_str().expect("Config path is not valid UTF-8")
-            ).unwrap_or_else(|e| {
-                eprintln!("Error loading key bindings from config file: {}", e);
-                KeyConfig::from_args(args)
-            });
-        }
-        // Fallback to command-line arguments
-        KeyConfig::from_args(args)
-    }
     // Load key configuration
     let key_config = load_key_config(&args);
 
