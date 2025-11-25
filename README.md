@@ -116,10 +116,10 @@ To automatically load a set of keybinds each time you play, create a `keybinds.t
 %APPDATA%\tuitris\keybinds.txt
 ```
 
-> [!WARN]
+> [!WARNING]
 > When you have placed a `keybinds.txt` file in your config path, all keybind related flags are ignored. This includes the `--kb-file` flag.
 
-> [!WARN]
+> [!WARNING]
 > When loading keybinds from a `.txt` file via the `--kb-file` flag, all other keybind related flags are ignored.
 
 ## Save-State File Format
